@@ -1,5 +1,5 @@
-const env = 'web-api.dsds.com'
-const socketUrl = `wss://${env}/socket.io/?device=web-app&version=1.0.0&identifier=ce0caec5e6eb57f4d7772458b81ffc69&EIO=3&transport=websocket`;
+const env = 'def-deposits-2.features4.kwiff.org'
+const socketUrl = `wss://${env}/socket.io/?device=web-app&version=1.0.0&identifier=f5c7ccad-c4a3-44df-9830-fe2c09f0096f&EIO=3&transport=websocket`;
 var WebSocketClient = require('websocket').client;
 
 var client = new WebSocketClient();
@@ -21,26 +21,35 @@ client.on('connect', function(connection) {
         }
     });
 
-    const msg = {
-        payload: {
-            appScreen: 1
-        },
-        appScreen: 1
-    }
-    sendCommand(connection, "promotions:get", msg);
+    connection.on('httpResponse', function(message) {
+        if (message.type === 'utf8') {
+            console.log("Received: '" + message.utf8Data + "'");
+        }
+    });
+
+    const msg = [
+        "command",
+        {
+            "message": "wallet:currency",
+            "payload": {
+                "isoAlphabeticCode": "GBP"
+            }
+        }
+    ]
+    sendCommand(connection, msg);
 });
 
 client.connect(socketUrl, 'echo-protocol');
 
-function sendCommand(connection, command, body) {
+function sendCommand(connection,msg) {
     if (connection.connected) {
-        const msg = {
-            message: command,
-            ...body
-        }
-
         connection.sendUTF(msg);
-        setTimeout(()=> sendCommand(connection, command, body), 1000);
+        
+        setTimeout(()=> {
+            sendCommand(connection, msg);
+            console.log('sended')
+        }, 1000);
+       
     }
 }
 
